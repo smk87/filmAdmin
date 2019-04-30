@@ -4,11 +4,9 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const passport = require("passport");
 
-// Import models
-const Admin = require("./models/Admin");
-
 // Import routes
 const admin = require("./api/admin");
+const crew = require("./api/crew");
 
 // Initialize express app
 const app = express();
@@ -24,8 +22,15 @@ mongoose
   .then(() => console.log("MongoDB connected."))
   .catch(err => console.log(err));
 
+//Passport midleware
+app.use(passport.initialize());
+
+//Passport Config
+require("./config/passport.js")(passport);
+
 // Define routes
 app.use("/api/admin", admin);
+app.use("/api/crew", crew);
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => {

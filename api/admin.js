@@ -1,6 +1,8 @@
 const router = require("express").Router();
 const validate = require("validator");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const secret = require("../utils/keys").secret;
 
 // Import model
 const Admin = require("../models/Admin");
@@ -49,6 +51,40 @@ router.post("/create", (req, res) => {
   } else {
     res.status(400).json(errors);
   }
+});
+
+// @@ Login, POST, Public
+router.post("/login", (req, res) => {
+  let errors = {};
+  let username = req.body.username;
+  let password = req.body.password;
+
+  Admin.findOne({ username: username }).then(user => {
+    if (!user) {
+      errors.username = "User does not exist";
+      res.status(404).json(errors);
+    } else {
+      //Check password
+      bcrypt.compare(password, user.password).then(isMatch => {
+        if (isMatch) {
+          //Password matched
+          const payload = { id: user._id, username: user.username };
+
+          //Sign Token
+          jwt.sign(payload, secret, { expiresIn: 3600 }, (err, token) => {
+            if (err) console.log(err);
+            res.status(200).json({
+              success: true,
+              token: "Bearer " + token
+            });
+          });
+        } else {
+          errors.password = "Password is incorrect";
+          res.status(400).json(errors);
+        }
+      });
+    }
+  });
 });
 
 module.exports = router;
