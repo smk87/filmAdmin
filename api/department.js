@@ -16,7 +16,7 @@ router.get(
 
 // @@ Add department, POST, Private
 router.post(
-  "/add",
+  "",
   passport.authenticate("jwt", { session: false }),
   (req, res) => {
     let errors = {};
@@ -24,11 +24,11 @@ router.post(
     // Input validation
     if (validate.isEmpty(req.body.title, { ignore_whitespace: false })) {
       errors.title = "Department title can not be empty.";
-      res.status(400).json(errors);
+      return res.status(400).json(errors);
     }
     if (validate.isEmpty(req.body.positions, { ignore_whitespace: false })) {
       errors.positions = "Department positions can not be empty.";
-      res.status(400).json(errors);
+      return res.status(400).json(errors);
     }
 
     // Create new instance of the collection and save to DB
@@ -45,10 +45,13 @@ router.post(
 // @@ Fetch all departments, GET, Private
 router.get("", passport.authenticate("jwt", { session: false }), (req, res) => {
   Department.find()
+    .populate("members", ["name", "positions"])
     .then(dep => {
-      if (dep) res.status(200).json(dep);
+      if (dep) return res.status(200).json(dep);
       else
-        res.status(404).json({ success: false, msg: "No department found." });
+        return res
+          .status(404)
+          .json({ success: false, msg: "No department found." });
     })
     .catch(err => res.status(400).json(err));
 });
@@ -60,16 +63,46 @@ router.get(
   (req, res) => {
     Department.findOne({ _id: req.params.id })
       .then(dep => {
-        if (dep) {
-          res.status(200).json(dep);
-        } else {
-          res.status(404).json({
-            success: false,
-            msg: "Department not found."
-          });
-        }
+        return res.status(200).json(dep);
       })
-      .catch(err => res.status(400).json(err));
+      .catch(err =>
+        res.status(404).json({
+          success: false,
+          msg: "Department not found."
+        })
+      );
+  }
+);
+
+// @@ Edit department, PUT, Private
+router.put(
+  "/:id",
+  passport.authenticate("jwt", { session: false }),
+  (req, res) => {
+    let errors = {};
+
+    // Input validation
+    if (validate.isEmpty(req.body.title, { ignore_whitespace: false })) {
+      errors.title = "Department title can not be empty.";
+      return res.status(400).json(errors);
+    }
+    if (validate.isEmpty(req.body.positions, { ignore_whitespace: false })) {
+      errors.positions = "Department positions can not be empty.";
+      return res.status(400).json(errors);
+    }
+
+    Department.findOneAndUpdate(
+      { _id: req.params.id },
+      { title: req.body.title, positions: req.body.positions.split(",") },
+      { new: true }
+    )
+      .then(dep => res.status(200).json(dep))
+      .catch(err =>
+        res.status(404).json({
+          success: false,
+          msg: "Department not found."
+        })
+      );
   }
 );
 

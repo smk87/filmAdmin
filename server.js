@@ -7,6 +7,7 @@ const passport = require("passport");
 // Import routes
 const admin = require("./api/admin");
 const department = require("./api/department");
+const crew = require("./api/crew");
 
 // Initialize express app
 const app = express();
@@ -22,6 +23,7 @@ mongoose
   .then(() => console.log("MongoDB connected."))
   .catch(err => console.log(err));
 mongoose.set("useCreateIndex", true);
+mongoose.set("useFindAndModify", false);
 
 //Passport midleware
 app.use(passport.initialize());
@@ -32,6 +34,7 @@ require("./config/passport.js")(passport);
 // Define routes
 app.use("/api/admin", admin);
 app.use("/api/department", department);
+app.use("/api/crew", crew);
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
