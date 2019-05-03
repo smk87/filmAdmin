@@ -3,11 +3,13 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const passport = require("passport");
+const compression = require("compression");
 
 // Import routes
 const admin = require("./api/admin");
 const department = require("./api/department");
 const crew = require("./api/crew");
+const position = require("./api/position");
 
 // Initialize express app
 const app = express();
@@ -33,9 +35,12 @@ require("./config/passport.js")(passport);
 
 // Define routes
 app.use("/api/admin", admin);
-app.use("/api/department", department);
-app.use("/api/crew", crew);
+app.use("/api/departments", department);
+app.use("/api/crews", crew);
+app.use("/api/positions", position);
 
+// Starts server
+app.use(compression()); // Used for compression
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
   console.log(`Server running on port ${port}...`);

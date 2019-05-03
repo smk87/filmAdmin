@@ -7,14 +7,10 @@ const Depatment = new Schema({
     required: true,
     unique: true
   },
-  positions: {
-    type: [String],
-    required: true
-  },
-  members: [
+  positions: [
     {
       type: Schema.Types.ObjectId,
-      ref: "crews"
+      ref: "positions"
     }
   ]
 });

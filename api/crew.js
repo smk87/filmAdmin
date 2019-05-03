@@ -46,7 +46,7 @@ router.post(
               // Save changes to Department collecton
               dep
                 .save()
-                .then(dep => res.status(200).json(crew))
+                .then(() => res.status(200).json(crew))
                 .catch(err => console.log(err));
             });
           })
@@ -55,5 +55,46 @@ router.post(
     });
   }
 );
+
+// @@ Edit crew, PUT, Private
+router.put(
+  "/:id",
+  passport.authenticate("jwt", { session: false }),
+  (req, res) => {
+    let errors = {};
+
+    // Input validation
+    if (validate.isEmpty(req.body.name, { ignore_whitespace: false })) {
+      errors.name = "Crew's name can not be empty.";
+      return res.status(400).json(errors);
+    }
+
+    Crew.findByIdAndUpdate(
+      req.params.id,
+      {
+        name: req.body.name,
+        positions: req.body.positions.split(",") || "",
+        experience: req.body.experience || "",
+        imdb: req.body.imdb || "",
+        email: req.body.email || "",
+        phone: req.body.phone || "",
+        skype: req.body.skype || "",
+        facebook: req.body.facebook || "",
+        twitter: req.body.twitter || ""
+      },
+      { new: true }
+    )
+      .then(crew =>
+        res
+          .status(200)
+          .json({ crew, success: true, msg: "Crew updated successfully." })
+      )
+      .catch(() =>
+        res.status(200).json({ success: false, msg: "Crew not found." })
+      );
+  }
+);
+
+// @@ Delete crew from position, DELETE, Private
 
 module.exports = router;
