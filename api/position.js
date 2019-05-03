@@ -3,7 +3,6 @@ const validate = require("validator");
 const passport = require("passport");
 
 // Import model
-const Department = require("../models/Department");
 const Position = require("../models/Position");
 
 // @@ Edit a position, PUT, Private

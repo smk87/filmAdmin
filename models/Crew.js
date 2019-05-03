@@ -6,9 +6,6 @@ const Crew = new Schema({
     type: String,
     required: true
   },
-  positions: {
-    type: [String]
-  },
   experience: {
     type: String
   },

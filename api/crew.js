@@ -4,9 +4,31 @@ const passport = require("passport");
 
 // Import models
 const Crew = require("../models/Crew");
-const Department = require("../models/Department");
+const Position = require("../models/Position");
 
-// @@ Add crew to department, POST, Private
+// @@ Fetch all crew, GET, Private
+router.get("", passport.authenticate("jwt", { session: false }), (req, res) => {
+  Crew.find()
+    .then(crews => res.status(200).json(crews))
+    .catch(() =>
+      res.status(404).json({ success: false, msg: "No crew found." })
+    );
+});
+
+// @@ Fetch a specific crew, GET, Private
+router.get(
+  "/:id",
+  passport.authenticate("jwt", { session: false }),
+  (req, res) => {
+    Crew.findById(req.params.id)
+      .then(crews => res.status(200).json(crews))
+      .catch(() =>
+        res.status(404).json({ success: false, msg: "Crew not found." })
+      );
+  }
+);
+
+// @@ Add crew to position, POST, Private
 router.post(
   "/:id",
   passport.authenticate("jwt", { session: false }),
@@ -19,17 +41,16 @@ router.post(
       return res.status(400).json(errors);
     }
 
-    Department.findById(req.params.id, (err, dep) => {
-      if (!dep) {
+    Position.findById(req.params.id, (err, pos) => {
+      if (!pos) {
         return res.status(404).json({
           success: false,
-          msg: "Invalid department"
+          msg: "Position not found."
         });
       } else {
         // Save to DB
         new Crew({
           name: req.body.name,
-          positions: req.body.positions.split(",") || "",
           experience: req.body.experience || "",
           imdb: req.body.imdb || "",
           email: req.body.email || "",
@@ -40,11 +61,11 @@ router.post(
         })
           .save()
           .then(crew => {
-            Department.findById(req.params.id).then(dep => {
-              // Update Department collections
-              dep.members.push(crew._id);
-              // Save changes to Department collecton
-              dep
+            Position.findById(req.params.id).then(pos => {
+              // Update Postion collection
+              pos.members.push(crew._id);
+              // Save changes to Position collecton
+              pos
                 .save()
                 .then(() => res.status(200).json(crew))
                 .catch(err => console.log(err));
@@ -73,7 +94,6 @@ router.put(
       req.params.id,
       {
         name: req.body.name,
-        positions: req.body.positions.split(",") || "",
         experience: req.body.experience || "",
         imdb: req.body.imdb || "",
         email: req.body.email || "",
@@ -82,19 +102,45 @@ router.put(
         facebook: req.body.facebook || "",
         twitter: req.body.twitter || ""
       },
-      { new: true }
-    )
-      .then(crew =>
-        res
-          .status(200)
-          .json({ crew, success: true, msg: "Crew updated successfully." })
-      )
-      .catch(() =>
-        res.status(200).json({ success: false, msg: "Crew not found." })
-      );
+      { new: true },
+      (err, crew) => {
+        if (!crew) {
+          return res.status(404).json({
+            success: false,
+            msg: "Crew not found."
+          });
+        } else {
+          return res.status(200).json({
+            crew,
+            success: true,
+            msg: "Crew updated successfully."
+          });
+        }
+      }
+    );
   }
 );
 
 // @@ Delete crew from position, DELETE, Private
+router.delete(
+  ":/id",
+  passport.authenticate("jwt", { session: false }),
+  (req, res) => {
+    Crew.findByIdAndDelete(req.params.id).then(crew => {
+      if (crew) {
+        return res.status(200).json({
+          crew,
+          success: true,
+          msg: "Crew deleted successfully."
+        });
+      } else {
+        return res.status(404).json({
+          success: false,
+          msg: "Crew not found."
+        });
+      }
+    });
+  }
+);
 
 module.exports = router;

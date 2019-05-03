@@ -51,7 +51,11 @@ router.post(
 // @@ Fetch all departments, GET, Private
 router.get("", passport.authenticate("jwt", { session: false }), (req, res) => {
   Department.find()
-    .populate("positions", ["title", "members"])
+    .populate({
+      path: "positions",
+      select: "title",
+      populate: { path: "members" }
+    })
     .then(dep => {
       if (dep) return res.status(200).json(dep);
       else
@@ -140,10 +144,13 @@ router.post(
     Department.findById(req.params.id)
       .then(dep => {
         // Add a position to the department
-        new Position({ title: req.body.positions }).save().then(pos => {
-          dep.positions.push(pos._id);
-          dep.save().then(() => res.status(200).json(pos));
-        });
+        new Position({ title: req.body.positions })
+          .save()
+          .then(pos => {
+            dep.positions.push(pos._id);
+            dep.save().then(() => res.status(200).json(pos));
+          })
+          .catch(err => console.log(err));
       })
       .catch(() =>
         res.status(404).json({
