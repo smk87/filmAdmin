@@ -72,7 +72,11 @@ router.get(
   passport.authenticate("jwt", { session: false }),
   (req, res) => {
     Department.findOne({ _id: req.params.id })
-      .populate("positions", ["title", "members"])
+      .populate({
+        path: "positions",
+        select: "title",
+        populate: { path: "members" }
+      })
       .then(dep => {
         return res.status(200).json(dep);
       })
